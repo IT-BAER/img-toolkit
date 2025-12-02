@@ -12,10 +12,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Copy, Check, LifeBuoy, XCircle, AlertTriangle } from "lucide-react";
 import { useErrorStore } from "@/context/ErrorStore";
+import { useTranslation } from "@/context/LanguageContext";
 
 
 const ErrorModal = () => {
   const { error, clearError } = useErrorStore();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -42,8 +44,7 @@ const ErrorModal = () => {
   };
 
   const handleOpenTicket = () => {
-    
-    window.open("https://github.com/karimz1/imgcompress/issues", "_blank");
+    window.open("https://github.com/IT-BAER/IMG-Toolkit/issues", "_blank");
   };
 
   return (
@@ -59,7 +60,7 @@ const ErrorModal = () => {
       <DialogContent className="bg-gray-950 text-gray-50 w-full max-w-3xl mx-auto p-6 md:p-8 rounded-lg shadow-2xl">
         <DialogHeader className="flex items-center space-x-3">
           <AlertTriangle className="h-10 w-10 text-red-500" />
-          <DialogTitle className="text-3xl font-bold">Error Occurred</DialogTitle>
+          <DialogTitle className="text-3xl font-bold">{t('error')}</DialogTitle>
         </DialogHeader>
         <DialogDescription className="mt-4">
           <div className="w-full font-medium text-xl mb-2 flex items-center space-x-2">
@@ -73,9 +74,6 @@ const ErrorModal = () => {
               </pre>
             </div>
           )}
-          <div className="mt-4 text-base text-gray-300">
-            Please open a ticket and notify the developer so this can be fixed ASAP.
-          </div>
         </DialogDescription>
         <DialogFooter className="flex flex-wrap justify-end gap-4 mt-6 w-full">
           <Button
@@ -91,7 +89,7 @@ const ErrorModal = () => {
             ) : (
               <>
                 <Copy className="h-4 w-4" />
-                <span className="ml-2">Copy Error</span>
+                <span className="ml-2">Copy</span>
               </>
             )}
           </Button>
@@ -101,7 +99,7 @@ const ErrorModal = () => {
             onClick={handleOpenTicket}
           >
             <LifeBuoy className="h-4 w-4" />
-            <span className="ml-2">Open Ticket</span>
+            <span className="ml-2">GitHub Issue</span>
           </Button>
           <Button
             className="flex items-center bg-gray-200 text-gray-900 border-gray-300 hover:bg-gray-300"
@@ -111,7 +109,7 @@ const ErrorModal = () => {
             }}
           >
             <XCircle className="h-4 w-4" />
-            <span className="ml-2">Close</span>
+            <span className="ml-2">{t('close')}</span>
           </Button>
         </DialogFooter>
       </DialogContent>

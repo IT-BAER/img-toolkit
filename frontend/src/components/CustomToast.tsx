@@ -1,28 +1,34 @@
 import { FileDown, FolderDown } from "lucide-react";
 import React from "react";
 
-const DownloadFileToast: React.FC<DownloadFileToastProps> = ({ fileName }) => (
+interface DownloadFileToastProps {
+  fileName: string;
+  downloadingLabel?: string;
+}
+
+interface DownloadZipToastProps {
+  downloadingLabel?: string;
+  folderLabel?: string;
+}
+
+const DownloadFileToast: React.FC<DownloadFileToastProps> = ({ fileName, downloadingLabel = "Downloading:" }) => (
     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <FileDown style={{ fontSize: "24px", flexShrink: 0 }} /> {}
+      <FileDown style={{ fontSize: "24px", flexShrink: 0 }} />
       <span style={{ fontSize: "16px", fontWeight: "bold", wordBreak: "break-word" }}>
-        Downloading: <strong>{fileName}</strong>...
+        {downloadingLabel} <strong>{fileName}</strong>...
       </span>
     </div>
   );
 
 
-  const DownloadZipToast: React.FC = () => (
+  const DownloadZipToast: React.FC<DownloadZipToastProps> = ({ downloadingLabel = "Downloading:", folderLabel = "Folder" }) => (
     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-      <FolderDown style={{ fontSize: "24px", flexShrink: 0 }} /> {}
+      <FolderDown style={{ fontSize: "24px", flexShrink: 0 }} />
       <span style={{ fontSize: "16px", fontWeight: "bold", wordBreak: "break-word" }}>
-        Downloading: <strong>Folder</strong>...
+        {downloadingLabel} <strong>{folderLabel}</strong>...
       </span>
     </div>
   );
-  
-  interface DownloadFileToastProps {
-    fileName: string
-  }
 
 export{
     DownloadFileToast, DownloadZipToast

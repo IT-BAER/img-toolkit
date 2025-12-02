@@ -1,44 +1,38 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { LanguageToggle } from "@/components/LanguageToggle";
+import { useTranslation } from "@/context/LanguageContext";
 
 const PageFooter = (props: React.HTMLAttributes<HTMLDivElement>) => {
+  const { t } = useTranslation();
+  
   return (
     <Card className={`w-full max-w-xl mt-8`} {...props}>
-      <CardHeader>
-        <CardTitle>Open Source & Free</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle>{t('openSource')}</CardTitle>
+        <LanguageToggle />
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-gray-600">
-          This project is <strong>open source</strong> and freely available.
-          Check out {" "}
+        <p className="text-sm text-gray-600 dark:text-gray-400">
+          {t('footerDescription')} {t('checkOut')}{" "}
           <a
-            href="https://github.com/karimz1/imgcompress"
+            href="https://github.com/IT-BAER/IMG-Toolkit"
             className="text-blue-400 hover:underline"
             target="_blank"
             rel="noopener noreferrer"
           >
-            the Source Code
+            {t('sourceCode')}
           </a>.
         </p>
-        <p className="text-sm text-gray-600 mt-2">
-          Created by <strong>Karim Zouine</strong>. If you find this tool useful, please consider donating to help support future features.
-          {" "} <strong><a
-            href="https://paypal.me/KarimZouine972"
-            className="text-blue-400 hover:underline ml-1"
-          >
-            🤗 Donate using PayPal
-          </a></strong>.
-          </p>
-          <p className="text-sm text-gray-600 mt-2">
-          Got ideas for new features? Share them on
+        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+          {t('featureIdeas')}{" "}
           <a
-            href="https://github.com/karimz1/imgcompress/issues"
-            className="text-blue-400 hover:underline ml-1"
+            href="https://github.com/IT-BAER/IMG-Toolkit/issues"
+            className="text-blue-400 hover:underline"
           >
             GitHub Issues
-          </a>. Thank you.
+          </a>.
         </p>
-
       </CardContent>
     </Card>
   );

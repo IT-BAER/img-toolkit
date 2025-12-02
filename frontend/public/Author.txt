@@ -1,3 +1,0 @@
-Repository: https://github.com/karimz1/imgcompress
-
-Tool by Karim Zouine and Frontend developed using NextJS with ❤️

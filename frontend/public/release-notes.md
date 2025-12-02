@@ -1,19 +1,24 @@
-## v0.2.4 — 2025-12-01
-- New Feature: Add support for extracting PDF pages as images in imgcompress ([#374](https://github.com/karimz1/imgcompress/issues/374))
+# IMG-Toolkit Release Notes
 
-## v0.2.3 — 2025-11-27
-- New Improvement "Support .PSD file format with verification: ([#361](https://github.com/karimz1/imgcompress/issues/361))
+## Version 1.0.0 (December 2025)
 
-## v0.2.2 — 2025-11-08
-- New Feature "Implement .EPS file format support and verification: ([#343](https://github.com/karimz1/imgcompress/issues/343))
+### Initial Release
 
+This is the first release of IMG-Toolkit, a refactored and redesigned version for native Debian/Ubuntu installation.
 
-## v0.2.1 — 2025-10-12
-- Enhances "Support Formats" by using Dialog: ([#325](https://github.com/karimz1/imgcompress/issues/325))
+#### Features
 
-## v0.2.0 — 2025-10-11
-- New Feature: Introduced modern dark theme with OS-based default (system) and persistent preference. ([#321](https://github.com/karimz1/imgcompress/issues/321))
-- New Feature: Add Release Notes viewer with a button to open it from the bottom-left toolbar  ([#322](https://github.com/karimz1/imgcompress/issues/322))
+- **Web Interface**: Modern, responsive UI for image compression and conversion
+- **Format Support**: HEIC, HEIF, PNG, JPG, JPEG, ICO, EPS, PSD, PDF
+- **Multi-language**: English and German interface
+- **Systemd Integration**: Runs as a native Linux service
+- **CLI Support**: Command-line interface for automation and batch processing
+- **Privacy-focused**: 100% local processing, no data leaves your server
 
-## v0.1.0 — 2025-10-01
-- New Feature: Ability to convert files but allow the user to target a specific max filesize for the outputs ([#316](https://github.com/karimz1/imgcompress/issues/316))
+#### Installation
+
+See the [README](../../../README.md) for installation instructions.
+
+---
+
+For more information, visit the [GitHub repository](https://github.com/IT-BAER/IMG-Toolkit).

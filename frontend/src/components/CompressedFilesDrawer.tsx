@@ -15,6 +15,7 @@ import {
 import { pluralize } from "@/lib/helpers";
 import { toast, ToastContainer } from "react-toastify";
 import { FileDown } from "lucide-react";
+import { useTranslation } from "@/context/LanguageContext";
 
 interface CompressedFilesDrawerProps {
   converted: string[];
@@ -27,7 +28,7 @@ interface CompressedFilesDrawerProps {
 
 const DownloadFileToast: React.FC<DownloadFileToastProps> = ({ fileName }) => (
   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-    <FileDown style={{ fontSize: "24px", flexShrink: 0 }} /> {}
+    <FileDown style={{ fontSize: "24px", flexShrink: 0 }} />
     <span style={{ fontSize: "16px", fontWeight: "bold", wordBreak: "break-word" }}>
       Downloading <strong>{fileName}</strong>...
     </span>
@@ -51,28 +52,30 @@ const CompressedFilesDrawer: React.FC<CompressedFilesDrawerProps> = ({
   onOpenChange,
   onDownloadAll,
 }) => {
+  const { t } = useTranslation();
+  
   return (
     <Drawer open={isOpen} onOpenChange={onOpenChange}>
       <DrawerTrigger asChild>
         <Button variant="secondary" className="mt-8">
-          🗃️ Show Compressed {pluralize(converted.length, "Image", "Images")}
+          🗃️ {t('compressedFiles')} ({converted.length})
         </Button>
       </DrawerTrigger>
       <DrawerContent className="border-0">
         <div className="mx-auto w-full max-w-sm">
           <DrawerHeader>
             <DrawerTitle className="text-lg font-semibold leading-none tracking-tight text-center">
-              Compressed {pluralize(converted.length, "Image", "Images")}
+              {t('compressedFiles')}
             </DrawerTitle>
             <DrawerDescription className="text-center">
-              Download your compressed {pluralize(converted.length, "Image", "Images")} individually or all at once.
+              {t('download')} ({converted.length} {pluralize(converted.length, "file", "files")})
             </DrawerDescription>
           </DrawerHeader>
           <div className="p-1 pb-0 flex flex-col items-center">
             {converted.length > 1 && (
               <div className="text-center p-5">
                 <Button variant="default" onClick={onDownloadAll} data-testid="drawer-download-all-as-zip-btn">
-                  Download All as Zip
+                  {t('downloadAll')} (ZIP)
                 </Button>
               </div>
             )}
@@ -99,7 +102,7 @@ const CompressedFilesDrawer: React.FC<CompressedFilesDrawerProps> = ({
           <div className="pt-10">
             <DrawerFooter>
               <DrawerClose asChild>
-                <Button variant="destructive">Close</Button>
+                <Button variant="destructive">{t('close')}</Button>
               </DrawerClose>
             </DrawerFooter>
           </div>

@@ -1,11 +1,12 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='image_converter',
+    name='img-toolkit',
     version='1.0.0',
-    description='A tool to convert images to JPEG with optional resizing.',
-    author='Karim Zouine',
-    author_email='mails.karimzouine@gmail.com',
+    description='Fast, private image compression and conversion tool for Debian/Ubuntu.',
+    author='IT-BAER',
+    author_email='',
+    url='https://github.com/IT-BAER/IMG-Toolkit',
     packages=find_packages(),
     install_requires=[
         'Pillow>=9.0.0',
@@ -14,12 +15,14 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'image-converter=backend.image_converter.bootstraper:main',
+            'img-toolkit=backend.image_converter.bootstraper:main',
         ],
     },
     classifiers=[
         'Programming Language :: Python :: 3',
-        'Operating System :: OS Independent',
+        'Programming Language :: Python :: 3.11',
+        'Operating System :: POSIX :: Linux',
+        'License :: OSI Approved :: MIT License',
     ],
-    python_requires='>=3.6',
+    python_requires='>=3.9',
 )

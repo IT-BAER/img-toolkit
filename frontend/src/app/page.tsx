@@ -4,8 +4,6 @@ import React, { useState, useCallback, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDropzone } from "react-dropzone";
-import Image from "next/image";
-import { useTheme } from "next-themes";
 import { HardDrive } from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReleaseNotesButton } from "@/components/ReleaseNotesButton";
@@ -29,28 +27,10 @@ import { DownloadZipToast } from "@/components/CustomToast";
 import { ErrorStoreProvider, useErrorStore } from "@/context/ErrorStore";
 import { useBackendHealth } from "@/hooks/useBackendHealth";
 import { useSupportedExtensions } from "@/hooks/useSupportedExtensions";
+import { useTranslation, LanguageProvider } from "@/context/LanguageContext";
 
 function HomePageContent() {
-  const [disableLogo, setDisableLogo] = useState(false);
-  const [configReady, setConfigReady] = useState(false);
-
-  useEffect(() => {
-    const loadRuntimeConfig = async () => {
-      try {
-        const res = await fetch("/config/runtime.json");
-        if (!res.ok) throw new Error("Config not found");
-        const config = await res.json();
-        setDisableLogo(config.DISABLE_LOGO === "true");
-      } catch (err) {
-        console.warn("DISABLE_LOGO config missing or invalid, defaulting to false", err);
-        setDisableLogo(false);
-      } finally {
-        setConfigReady(true);
-      }
-    };
-
-    loadRuntimeConfig();
-  }, []);
+  const { t } = useTranslation();
 
   const {
     supportedExtensions,
@@ -82,7 +62,6 @@ function HomePageContent() {
 
   const { error, setError, clearError } = useErrorStore();
   const backendDown = useBackendHealth();
-  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     if (outputFormat !== "jpeg") {
@@ -295,23 +274,14 @@ function HomePageContent() {
       <div className="p-4 flex-grow flex flex-col items-center text-foreground">
         <ToastContainer />
         <Card className="w-full max-w-xl">
-          <CardTitle
-            className={`text-center pt-5 ${
-              configReady && disableLogo ? "pb-8" : ""
-            }`}
-          >
-            An Image Compression Tool
-          </CardTitle>
-          {configReady && !disableLogo && (
-            <CardHeader>
-              <Image
-                src={resolvedTheme === "dark" ? "/mascot_dark.jpg" : "/mascot.jpg"}
-                width={600}
-                height={600}
-                alt="Mascot of ImgCompress a Tool by Karim Zouine"
-              />
-            </CardHeader>
-          )}
+          <CardHeader>
+            <CardTitle className="text-center text-2xl font-bold">
+              IMG-Toolkit
+            </CardTitle>
+            <p className="text-center text-gray-400 text-sm">
+              {t('subtitle')}
+            </p>
+          </CardHeader>
           <CardContent>
             <FileConversionForm
               isLoading={isLoading}
@@ -399,10 +369,12 @@ function HomePageContent() {
 
 export default function HomePage() {
   return (
-    <ErrorStoreProvider>
-      <TooltipProvider delayDuration={0}>
-        <HomePageContent />
-      </TooltipProvider>
-    </ErrorStoreProvider>
+    <LanguageProvider>
+      <ErrorStoreProvider>
+        <TooltipProvider delayDuration={0}>
+          <HomePageContent />
+        </TooltipProvider>
+      </ErrorStoreProvider>
+    </LanguageProvider>
   );
 }

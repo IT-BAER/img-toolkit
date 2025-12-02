@@ -4,6 +4,7 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Megaphone } from "lucide-react"
+import { useTranslation } from "@/context/LanguageContext"
 
 interface ReleaseEntry {
   version: string
@@ -185,32 +186,24 @@ const parseMarkdown = (markdown: string): ReleaseEntry[] => {
   return releases
 }
 
-const InfoBox = () => (
+const InfoBox = ({ t }: { t: (key: string) => string }) => (
   <div className="mb-3 p-3 bg-muted/50 rounded-lg border border-border/50">
     <p className="text-xs text-muted-foreground leading-relaxed">
-      Only the latest changes are listed here. For older release notes and all resolved issues, visit{" "}
-      <a
-        href="https://github.com/karimz1/imgcompress/issues?q=is%3Aissue%20state%3Aclosed"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline underline-offset-2 hover:text-foreground transition-colors"
-      >
-        GitHub Issues
-      </a>.
+      {t('releaseNotesInfo')}
     </p>
   </div>
 )
 
-const LoadingState = () => (
-  <p className="text-sm text-muted-foreground">Loading…</p>
+const LoadingState = ({ t }: { t: (key: string) => string }) => (
+  <p className="text-sm text-muted-foreground">{t('loading')}</p>
 )
 
 const ErrorState = ({ message }: { message: string }) => (
   <p className="text-sm text-destructive">{message}</p>
 )
 
-const EmptyState = () => (
-  <p className="text-sm text-muted-foreground">No release notes available.</p>
+const EmptyState = ({ t }: { t: (key: string) => string }) => (
+  <p className="text-sm text-muted-foreground">{t('noReleaseNotes')}</p>
 )
 
 const ReleaseNote = ({ note }: { note: string }) => (
@@ -268,6 +261,7 @@ const useFetchReleaseNotes = () => {
 }
 
 export function ReleaseNotesButton() {
+  const { t } = useTranslation()
   const [open, setOpen] = React.useState(false)
   const { loading, error, data, loadNotes } = useFetchReleaseNotes()
 
@@ -289,19 +283,19 @@ export function ReleaseNotesButton() {
           className="h-9 rounded-full px-3 py-2 shadow-sm flex items-center gap-2 opacity-70 hover:opacity-100 transition-opacity border border-black/10 dark:border-white/10 bg-white/60 dark:bg-zinc-900/60 hover:bg-white/70 dark:hover:bg-zinc-800/70 backdrop-blur"
         >
           <Megaphone className="h-4 w-4" />
-          <span className="hidden sm:inline">Release Notes</span>
+          <span className="hidden sm:inline">{t('releaseNotes')}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Release Notes</DialogTitle>
+          <DialogTitle>{t('releaseNotesTitle')}</DialogTitle>
         </DialogHeader>
-        <InfoBox />
+        <InfoBox t={t} />
         <div className="space-y-3">
-          {loading && <LoadingState />}
+          {loading && <LoadingState t={t} />}
           {error && <ErrorState message={error} />}
           {!loading && !error && releases.length > 0 && <ReleasesList releases={releases} />}
-          {!loading && !error && !releases.length && <EmptyState />}
+          {!loading && !error && !releases.length && <EmptyState t={t} />}
         </div>
       </DialogContent>
     </Dialog>

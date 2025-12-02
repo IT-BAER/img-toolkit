@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 
 import { SupportedFormatsDialog } from "@/components/SupportedFormatsDialog"
+import { useTranslation } from "@/context/LanguageContext";
 
 interface FileConversionFormProps {
   isLoading: boolean;
@@ -94,6 +95,8 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
   extensionsLoading,
   extensionsError,
 }) => {
+  const { t } = useTranslation();
+
   const renderError = useMemo(
     () =>
       error && (
@@ -102,23 +105,23 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
           className="p-2 bg-red-600 text-white rounded-md"
         >
           <p data-testid="error-message-holder">
-            <strong>Error:</strong> {error.message}
+            <strong>{t('error')}:</strong> {error.message}
           </p>
           {error.details && (
             <p data-testid="error-details-holder">
-              <strong>Details:</strong> {error.details}
+              <strong>{t('details')}:</strong> {error.details}
             </p>
           )}
         </div>
       ),
-    [error]
+    [error, t]
   );
 
   const renderFilesList = useMemo(
     () =>
       files.length > 0 && (
         <div className="mt-2 space-y-1">
-          <Label>Files to convert:</Label>
+          <Label>{t('filesToConvert')}</Label>
           {files.map((file) => (
             <div
               key={file.name}
@@ -135,13 +138,13 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
                 onClick={() => removeFile(file.name)}
                 data-testid="dropzone-remove-file-btn"
               >
-                Remove
+                {t('remove')}
               </Button>
             </div>
           ))}
         </div>
       ),
-    [files, isLoading, removeFile]
+    [files, isLoading, removeFile, t]
   );
 
   const renderDropZone = useMemo(
@@ -154,15 +157,15 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
       >
         <input {...getInputProps()} data-testid="dropzone-input" />
         {isDragActive ? (
-          <p className="text-blue-300">Drop images or PDFs here...</p>
+          <p className="text-blue-300">{t('dropImagesHere')}</p>
         ) : isLoading ? (
-          <p>Cannot drop files while processing...</p>
+          <p>{t('cannotDropWhileProcessing')}</p>
         ) : (
-          <p>Drag & drop images or PDFs here, or click to select</p>
+          <p>{t('dropFilesHere')}</p>
         )}
       </div>
     ),
-    [getInputProps, getRootProps, isDragActive, isLoading]
+    [getInputProps, getRootProps, isDragActive, isLoading, t]
   );
 
   return (
@@ -180,7 +183,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
       <div className="space-y-1">
         <div className="flex items-center gap-1">
           <Label htmlFor="outputFormat" className="text-sm">
-            Output Format
+            {t('outputFormat')}
           </Label>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -192,7 +195,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               side="top"
               className="bg-gray-800 text-white p-2 rounded shadow-lg border-0 whitespace-pre-line"
             >
-              {tooltipContent.outputFormat}
+              {t('tooltipOutputFormat')}
             </TooltipContent>
           </Tooltip>
         </div>
@@ -204,9 +207,9 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
             <SelectValue placeholder="Select format" />
           </SelectTrigger>
           <SelectContent className="bg-gray-800 text-gray-300 border-gray-700">
-            <SelectItem value="jpeg">JPEG (smaller file size)</SelectItem>
-            <SelectItem value="png">PNG (preserves transparency)</SelectItem>
-            <SelectItem value="ico">ICO (preserves transparency)</SelectItem>
+            <SelectItem value="jpeg">{t('jpegSmaller')}</SelectItem>
+            <SelectItem value="png">{t('pngTransparency')}</SelectItem>
+            <SelectItem value="ico">{t('icoTransparency')}</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -214,7 +217,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
       {/* JPEG controls mode */}
       {outputFormat === "jpeg" && (
         <div className="space-y-2">
-          <Label className="text-sm">JPEG settings mode</Label>
+          <Label className="text-sm">{t('jpegSettingsMode')}</Label>
           <div className="grid grid-cols-2 gap-2">
             <Button
               type="button"
@@ -222,7 +225,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               disabled={isLoading}
               onClick={() => setJpegMode("quality")}
             >
-              Set by Quality
+              {t('setByQuality')}
             </Button>
             <Button
               type="button"
@@ -230,7 +233,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               disabled={isLoading}
               onClick={() => setJpegMode("size")}
             >
-              Set by File Size
+              {t('setByFileSize')}
             </Button>
           </div>
         </div>
@@ -244,7 +247,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               htmlFor="quality"
               className="text-sm flex items-center gap-1"
             >
-              Quality (for JPEG only)
+              {t('quality')}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
@@ -255,7 +258,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
                   side="top"
                   className="bg-gray-800 text-white p-2 rounded shadow-lg border-0"
                 >
-                  <p className="text-sm">{tooltipContent.quality}</p>
+                  <p className="text-sm">{t('tooltipQuality')}</p>
                 </TooltipContent>
               </Tooltip>
             </Label>
@@ -273,16 +276,16 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
           />
           <div className="flex gap-2 pt-2 flex-wrap">
             <Button type="button" size="sm" variant="outline" disabled={isLoading} onClick={() => setQuality("60")}>
-              Smaller (60)
+              {t('smaller')} (60)
             </Button>
             <Button type="button" size="sm" variant="outline" disabled={isLoading} onClick={() => setQuality("75")}>
-              Balanced (75)
+              {t('balanced')} (75)
             </Button>
             <Button type="button" size="sm" variant="outline" disabled={isLoading} onClick={() => setQuality("85")}>
-              High (85)
+              {t('high')} (85)
             </Button>
             <Button type="button" size="sm" variant="outline" disabled={isLoading} onClick={() => setQuality("100")}>
-              Max (100)
+              {t('max')} (100)
             </Button>
           </div>
         </div>
@@ -296,7 +299,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               htmlFor="targetSizeMBRange"
               className="text-sm flex items-center gap-1"
             >
-              Max file size (for JPEG only)
+              {t('maxFileSize')}
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
@@ -307,7 +310,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
                   side="top"
                   className="bg-gray-800 text-white p-2 rounded shadow-lg border-0"
                 >
-                  <p className="text-sm">{tooltipContent.targetSize}</p>
+                  <p className="text-sm">{t('tooltipTargetSize')}</p>
                 </TooltipContent>
               </Tooltip>
             </Label>
@@ -351,7 +354,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
           </div>
 
           <p className="text-xs text-gray-400">
-            It will try to keep each JPEG at or below this size by automatically adjusting quality.
+            {t('fileSizeHint')}
           </p>
         </div>
       )}
@@ -363,7 +366,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
             htmlFor="resizeWidthToggle"
             className="text-sm flex items-center gap-1"
           >
-            Resize Width
+            {t('resizeWidth')}
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
@@ -374,7 +377,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
                 side="top"
                 className="bg-gray-800 text-white p-2 rounded shadow-lg border-0"
               >
-                <p className="text-sm">{tooltipContent.resizeWidth}</p>
+                <p className="text-sm">{t('tooltipResizeWidth')}</p>
               </TooltipContent>
             </Tooltip>
           </Label>
@@ -423,10 +426,10 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
           {isLoading ? (
             <div className="flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin" />
-              Processing...
+              {t('processing')}
             </div>
           ) : (
-            "Start Converting"
+            t('startConverting')
           )}
         </Button>
         <Button
@@ -437,7 +440,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
           className="flex items-center gap-2 outline outline-1 outline-gray-700"
         >
           <Trash className="h-4 w-4" />
-          Clear
+          {t('clear')}
         </Button>
       </div>
     </form>
