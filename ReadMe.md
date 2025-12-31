@@ -26,10 +26,22 @@ All formats supported by Pillow library.
 ### Prerequisites
 - Debian 11+ or Ubuntu 20.04+
 - Root/sudo access
-- At least 2GB RAM
+- At least 1GB RAM (2GB recommended)
 - Internet connection (for downloading dependencies)
 
-### Quick Install
+### One-Line Install
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/IT-BAER/IMG-Toolkit/main/get-img-toolkit.sh | sudo bash
+```
+
+### Update Existing Installation
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/IT-BAER/IMG-Toolkit/main/get-img-toolkit.sh | sudo bash -s -- update
+```
+
+### Manual Install (Alternative)
 
 ```bash
 # Clone the repository
@@ -40,23 +52,46 @@ cd IMG-Toolkit
 sudo bash install.sh
 ```
 
+### Install Script Options
+
+| Command | Description |
+|---------|-------------|
+| `./install.sh install` | Fresh installation (default) |
+| `./install.sh update` | Update existing installation |
+| `./install.sh uninstall` | Remove IMG-Toolkit completely |
+| `./install.sh status` | Show current installation status |
+
 The installation script will:
-1. Install system dependencies (Python, Node.js, image libraries)
+1. Install system dependencies (Python 3, Node.js 20, image libraries)
 2. Create a dedicated service user
-3. Set up a Python virtual environment
-4. Build the frontend
-5. Create and enable a systemd service
+3. Set up Python virtual environment
+4. Build the Next.js frontend
+5. Configure systemd services (backend + frontend)
+6. Set up nginx as reverse proxy
 
 ### Access the Web UI
 
 After installation, access the web interface at:
 ```
-http://localhost:5000
+http://localhost
 ```
 
 Or from another machine:
 ```
-http://YOUR_SERVER_IP:5000
+http://YOUR_SERVER_IP
+```
+
+### Service Management
+
+```bash
+# Check status
+sudo systemctl status img-toolkit img-toolkit-frontend nginx
+
+# View logs
+sudo journalctl -u img-toolkit -u img-toolkit-frontend -f
+
+# Restart services
+sudo systemctl restart img-toolkit img-toolkit-frontend
 ```
 
 ## Service Management

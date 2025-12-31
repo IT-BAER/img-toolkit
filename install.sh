@@ -171,6 +171,13 @@ stop_services() {
 setup_installation_directory() {
     log_step "Setting up installation directory..."
     
+    # If script is already running from INSTALL_DIR (via bootstrapper), skip copying
+    if [[ "$SCRIPT_DIR" == "$INSTALL_DIR" ]]; then
+        log_info "Running from installation directory - skipping file copy"
+        log_success "Application files ready"
+        return
+    fi
+    
     if [[ "$MODE" == "update" ]] && [[ -d "$INSTALL_DIR" ]]; then
         # For updates, preserve venv and just update source files
         log_info "Updating existing installation..."
