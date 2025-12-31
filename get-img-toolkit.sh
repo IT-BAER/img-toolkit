@@ -119,15 +119,15 @@ case "$MODE" in
         
         cd "$INSTALL_DIR"
         
-        # Run the main installer
+        # Run the main installer (use -y for non-interactive mode)
         chmod +x install.sh
-        ./install.sh "$MODE"
+        ./install.sh "$MODE" -y
         ;;
         
     uninstall)
         if [[ -f "$INSTALL_DIR/install.sh" ]]; then
             cd "$INSTALL_DIR"
-            ./install.sh uninstall
+            ./install.sh uninstall -y
         else
             log_error "IMG-Toolkit is not installed or install.sh not found"
             exit 1

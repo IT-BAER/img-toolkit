@@ -23,6 +23,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Mode flags
 MODE="install"  # install, update, uninstall, status
+FORCE=false     # Skip confirmation prompts
 
 # Functions
 log_info() {
@@ -47,7 +48,7 @@ log_step() {
 
 print_usage() {
     echo ""
-    echo "Usage: $0 [OPTION]"
+    echo "Usage: $0 [OPTION] [FLAGS]"
     echo ""
     echo "Options:"
     echo "  install     Fresh installation (default)"
@@ -55,6 +56,9 @@ print_usage() {
     echo "  uninstall   Remove IMG-Toolkit completely"
     echo "  status      Show current installation status"
     echo "  --help      Show this help message"
+    echo ""
+    echo "Flags:"
+    echo "  -y, --yes   Skip confirmation prompts (for automation)"
     echo ""
 }
 
@@ -109,15 +113,21 @@ install_system_dependencies() {
     
     apt-get update -qq
     
+    # Try libfreetype-dev first (Debian 12+), fall back to libfreetype6-dev
+    FREETYPE_PKG="libfreetype-dev"
+    if ! apt-cache show libfreetype-dev &>/dev/null; then
+        FREETYPE_PKG="libfreetype6-dev"
+    fi
+    
     # Install base dependencies
     apt-get install -y --no-install-recommends \
         python3 python3-pip python3-venv python3-dev \
         libjpeg-dev libpng-dev libtiff-dev libwebp-dev libopenjp2-7-dev \
         libimagequant-dev libheif-dev liblcms2-dev \
-        libfreetype6-dev libharfbuzz-dev libfribidi-dev \
+        "$FREETYPE_PKG" libharfbuzz-dev libfribidi-dev \
         libxcb1-dev zlib1g-dev libgif-dev ghostscript \
         curl wget git ca-certificates gnupg \
-        build-essential 2>/dev/null
+        build-essential nginx 2>/dev/null
     
     # Check if Node.js 18+ is already installed
     if check_node_version; then
@@ -128,17 +138,23 @@ install_system_dependencies() {
         
         # Download and install GPG key non-interactively
         curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key 2>/dev/null | \
-            gpg --batch --yes --dearmor -o /etc/apt/keyrings/nodesource.gpg 2>/dev/null
+            gpg --batch --yes --dearmor -o /etc/apt/keyrings/nodesource.gpg 2>/dev/null || true
         
         echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
         apt-get update -qq
         apt-get install -y nodejs 2>/dev/null
     fi
     
+    # Verify Node.js was installed
+    if ! check_node_version; then
+        log_error "Failed to install Node.js 18+. Please install manually."
+        exit 1
+    fi
+    
     # Install pnpm if not present
     if ! command_exists pnpm; then
         log_info "Installing pnpm..."
-        npm install -g pnpm 2>/dev/null
+        npm install -g pnpm 2>/dev/null || npm install -g pnpm
     else
         log_info "pnpm already installed"
     fi
@@ -146,7 +162,7 @@ install_system_dependencies() {
     # Install serve for static file hosting
     if ! command_exists serve; then
         log_info "Installing serve..."
-        npm install -g serve 2>/dev/null
+        npm install -g serve 2>/dev/null || npm install -g serve
     fi
     
     log_success "System dependencies ready"
@@ -472,11 +488,15 @@ show_status() {
 do_uninstall() {
     echo ""
     log_warn "This will completely remove IMG-Toolkit!"
-    read -p "Are you sure? (y/N): " confirm
     
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-        log_info "Uninstall cancelled"
-        exit 0
+    if [[ "$FORCE" != "true" ]]; then
+        read -p "Are you sure? (y/N): " confirm </dev/tty || confirm="n"
+        if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+            log_info "Uninstall cancelled"
+            exit 0
+        fi
+    else
+        log_info "Force flag set - proceeding with uninstall"
     fi
     
     log_info "Stopping and disabling services..."
@@ -517,10 +537,14 @@ main() {
         install)
             if is_installed; then
                 log_warn "IMG-Toolkit is already installed."
-                read -p "Do you want to reinstall? (y/N): " confirm
-                if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-                    log_info "Use '$0 update' to update existing installation"
-                    exit 0
+                if [[ "$FORCE" != "true" ]]; then
+                    read -p "Do you want to reinstall? (y/N): " confirm </dev/tty || confirm="n"
+                    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
+                        log_info "Use '$0 update' to update existing installation"
+                        exit 0
+                    fi
+                else
+                    log_info "Force flag set - proceeding with reinstall"
                 fi
             fi
             stop_services
@@ -566,20 +590,27 @@ main() {
 }
 
 # Parse arguments
-case "${1:-install}" in
-    install|update|uninstall|status)
-        MODE="$1"
-        ;;
-    --help|-h)
-        print_usage
-        exit 0
-        ;;
-    *)
-        log_error "Unknown option: $1"
-        print_usage
-        exit 1
-        ;;
-esac
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        install|update|uninstall|status)
+            MODE="$1"
+            shift
+            ;;
+        -y|--yes|--force)
+            FORCE=true
+            shift
+            ;;
+        --help|-h)
+            print_usage
+            exit 0
+            ;;
+        *)
+            log_error "Unknown option: $1"
+            print_usage
+            exit 1
+            ;;
+    esac
+done
 
 # Run main function
 main "$@"
