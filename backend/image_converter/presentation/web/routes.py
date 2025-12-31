@@ -7,7 +7,6 @@ import traceback
 from typing import Optional
 
 from flask import Blueprint, request, jsonify, send_from_directory
-from setuptools.command.build_ext import use_stubs
 from werkzeug.utils import secure_filename
 
 from backend.image_converter.core.internals.utls import Result, supported_extensions
