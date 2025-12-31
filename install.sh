@@ -1,7 +1,16 @@
 #!/bin/bash
-# IMG-Toolkit Installation Script for Debian/Ubuntu
-# This script installs all dependencies and sets up IMG-Toolkit as a systemd service
-# Supports: install, update, uninstall, status
+# IMG-Toolkit Unified Installer
+# 
+# One-liner install:
+#   curl -fsSL https://raw.githubusercontent.com/IT-BAER/IMG-Toolkit/main/install.sh | sudo bash
+#
+# With options:
+#   curl -fsSL ... | sudo bash -s -- update
+#   curl -fsSL ... | sudo bash -s -- uninstall
+#   curl -fsSL ... | sudo bash -s -- status
+#
+# Local usage (after clone):
+#   sudo ./install.sh [install|update|uninstall|status] [-y]
 
 set -e
 
@@ -14,12 +23,21 @@ CYAN='\033[0;36m'
 NC='\033[0m' # No Color
 
 # Configuration
+REPO_URL="https://github.com/IT-BAER/IMG-Toolkit.git"
 INSTALL_DIR="/opt/img-toolkit"
 SERVICE_USER="img-toolkit"
 BACKEND_SERVICE="img-toolkit"
 FRONTEND_SERVICE="img-toolkit-frontend"
 VERSION_FILE="${INSTALL_DIR}/.version"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Detect if running from pipe (curl | bash) or from local file
+if [[ -z "${BASH_SOURCE[0]}" ]] || [[ "${BASH_SOURCE[0]}" == "bash" ]]; then
+    RUNNING_FROM_CURL=true
+    SCRIPT_DIR=""
+else
+    RUNNING_FROM_CURL=false
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
 
 # Mode flags
 MODE="install"  # install, update, uninstall, status
@@ -47,6 +65,11 @@ log_step() {
 }
 
 print_usage() {
+    echo ""
+    echo "IMG-Toolkit Installer"
+    echo ""
+    echo "One-liner installation:"
+    echo "  curl -fsSL https://raw.githubusercontent.com/IT-BAER/IMG-Toolkit/main/install.sh | sudo bash"
     echo ""
     echo "Usage: $0 [OPTION] [FLAGS]"
     echo ""
@@ -89,12 +112,10 @@ get_installed_version() {
     fi
 }
 
-# Check if a command exists
 command_exists() {
     command -v "$1" &> /dev/null
 }
 
-# Check Node.js version (need 18+)
 check_node_version() {
     if command_exists node; then
         NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
@@ -105,21 +126,84 @@ check_node_version() {
     return 1
 }
 
+# Ensure git is available (needed for curl | bash mode)
+ensure_git() {
+    if ! command_exists git; then
+        log_info "Installing git..."
+        apt-get update -qq
+        apt-get install -y git 2>/dev/null
+    fi
+}
+
+# Clone or update repository
+setup_repository() {
+    log_step "Setting up repository..."
+    
+    ensure_git
+    
+    if [[ -d "$INSTALL_DIR/.git" ]]; then
+        # Existing git repo - reset local changes and pull
+        log_info "Updating existing repository..."
+        cd "$INSTALL_DIR"
+        git config --global --add safe.directory "$INSTALL_DIR" 2>/dev/null || true
+        git checkout -- . 2>/dev/null || true  # Reset any local changes
+        git clean -fd 2>/dev/null || true       # Remove untracked files
+        git fetch origin
+        git reset --hard origin/main
+        log_success "Repository updated"
+    elif [[ -d "$INSTALL_DIR" ]] && [[ "$MODE" == "update" ]]; then
+        # Existing installation but not a git repo - convert it
+        log_info "Converting existing installation to git repo..."
+        local backup_venv=""
+        local backup_node_modules=""
+        
+        # Backup environments
+        if [[ -d "$INSTALL_DIR/venv" ]]; then
+            backup_venv="/tmp/img-toolkit-venv-backup-$$"
+            mv "$INSTALL_DIR/venv" "$backup_venv"
+        fi
+        if [[ -d "$INSTALL_DIR/frontend/node_modules" ]]; then
+            backup_node_modules="/tmp/img-toolkit-node-modules-backup-$$"
+            mv "$INSTALL_DIR/frontend/node_modules" "$backup_node_modules"
+        fi
+        
+        rm -rf "$INSTALL_DIR"
+        git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
+        
+        # Restore environments
+        [[ -n "$backup_venv" ]] && mv "$backup_venv" "$INSTALL_DIR/venv"
+        [[ -n "$backup_node_modules" ]] && mv "$backup_node_modules" "$INSTALL_DIR/frontend/node_modules"
+        
+        log_success "Repository cloned"
+    else
+        # Fresh installation
+        if [[ -d "$INSTALL_DIR" ]]; then
+            log_warn "Removing existing installation..."
+            systemctl stop "$BACKEND_SERVICE" "$FRONTEND_SERVICE" 2>/dev/null || true
+            rm -rf "$INSTALL_DIR"
+        fi
+        
+        log_info "Cloning repository..."
+        git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
+        log_success "Repository cloned"
+    fi
+    
+    cd "$INSTALL_DIR"
+}
+
 install_system_dependencies() {
     log_step "Installing system dependencies..."
     
-    # Use non-interactive mode for apt
     export DEBIAN_FRONTEND=noninteractive
     
     apt-get update -qq
     
-    # Try libfreetype-dev first (Debian 12+), fall back to libfreetype6-dev
+    # Detect freetype package name (Debian 12+ uses libfreetype-dev)
     FREETYPE_PKG="libfreetype-dev"
     if ! apt-cache show libfreetype-dev &>/dev/null; then
         FREETYPE_PKG="libfreetype6-dev"
     fi
     
-    # Install base dependencies
     apt-get install -y --no-install-recommends \
         python3 python3-pip python3-venv python3-dev \
         libjpeg-dev libpng-dev libtiff-dev libwebp-dev libopenjp2-7-dev \
@@ -136,7 +220,6 @@ install_system_dependencies() {
         log_info "Installing Node.js 20.x LTS..."
         mkdir -p /etc/apt/keyrings
         
-        # Download and install GPG key non-interactively
         curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key 2>/dev/null | \
             gpg --batch --yes --dearmor -o /etc/apt/keyrings/nodesource.gpg 2>/dev/null || true
         
@@ -145,13 +228,13 @@ install_system_dependencies() {
         apt-get install -y nodejs 2>/dev/null
     fi
     
-    # Verify Node.js was installed
+    # Verify Node.js installation
     if ! check_node_version; then
         log_error "Failed to install Node.js 18+. Please install manually."
         exit 1
     fi
     
-    # Install pnpm if not present
+    # Install pnpm
     if ! command_exists pnpm; then
         log_info "Installing pnpm..."
         npm install -g pnpm 2>/dev/null || npm install -g pnpm
@@ -159,7 +242,7 @@ install_system_dependencies() {
         log_info "pnpm already installed"
     fi
     
-    # Install serve for static file hosting
+    # Install serve
     if ! command_exists serve; then
         log_info "Installing serve..."
         npm install -g serve 2>/dev/null || npm install -g serve
@@ -184,62 +267,6 @@ stop_services() {
     systemctl stop "$FRONTEND_SERVICE" 2>/dev/null || true
 }
 
-setup_installation_directory() {
-    log_step "Setting up installation directory..."
-    
-    # If script is already running from INSTALL_DIR (via bootstrapper), skip copying
-    if [[ "$SCRIPT_DIR" == "$INSTALL_DIR" ]]; then
-        log_info "Running from installation directory - skipping file copy"
-        log_success "Application files ready"
-        return
-    fi
-    
-    if [[ "$MODE" == "update" ]] && [[ -d "$INSTALL_DIR" ]]; then
-        # For updates, preserve venv and just update source files
-        log_info "Updating existing installation..."
-        
-        # Backup current version
-        if [[ -f "$VERSION_FILE" ]]; then
-            cp "$VERSION_FILE" "${VERSION_FILE}.bak"
-        fi
-        
-        # Update backend files
-        rm -rf "$INSTALL_DIR/backend"
-        cp -r "$SCRIPT_DIR/backend" "$INSTALL_DIR/"
-        
-        # Update frontend source (preserve node_modules)
-        if [[ -d "$INSTALL_DIR/frontend/node_modules" ]]; then
-            log_info "Preserving frontend node_modules..."
-            mv "$INSTALL_DIR/frontend/node_modules" /tmp/img-toolkit-node-modules-backup
-        fi
-        rm -rf "$INSTALL_DIR/frontend"
-        cp -r "$SCRIPT_DIR/frontend" "$INSTALL_DIR/"
-        if [[ -d "/tmp/img-toolkit-node-modules-backup" ]]; then
-            mv /tmp/img-toolkit-node-modules-backup "$INSTALL_DIR/frontend/node_modules"
-        fi
-        
-        # Update other files
-        cp "$SCRIPT_DIR/setup.py" "$INSTALL_DIR/"
-        cp "$SCRIPT_DIR/requirements.txt" "$INSTALL_DIR/"
-    else
-        # Fresh installation
-        if [[ -d "$INSTALL_DIR" ]]; then
-            log_warn "Removing existing installation..."
-            rm -rf "$INSTALL_DIR"
-        fi
-        
-        mkdir -p "$INSTALL_DIR"
-        
-        # Copy all application files
-        cp -r "$SCRIPT_DIR/backend" "$INSTALL_DIR/"
-        cp -r "$SCRIPT_DIR/frontend" "$INSTALL_DIR/"
-        cp "$SCRIPT_DIR/setup.py" "$INSTALL_DIR/"
-        cp "$SCRIPT_DIR/requirements.txt" "$INSTALL_DIR/"
-    fi
-    
-    log_success "Application files ready"
-}
-
 setup_python_environment() {
     log_step "Setting up Python environment..."
     
@@ -255,7 +282,6 @@ setup_python_environment() {
         pip install --upgrade pip -q
     fi
     
-    # Install/update requirements
     pip install --no-cache-dir -q -r requirements.txt
     pip install --no-cache-dir -q -e .
     
@@ -269,14 +295,12 @@ build_frontend() {
     
     cd "$INSTALL_DIR/frontend"
     
-    # Install dependencies (use frozen lockfile if available)
     if [[ -f "pnpm-lock.yaml" ]]; then
         pnpm install --frozen-lockfile 2>/dev/null || pnpm install
     else
         pnpm install
     fi
     
-    # Build with memory limit for low-memory systems
     export NODE_OPTIONS="--max-old-space-size=512"
     pnpm run build
     
@@ -304,7 +328,6 @@ RestartSec=5
 StandardOutput=journal
 StandardError=journal
 
-# Security hardening
 NoNewPrivileges=yes
 PrivateTmp=yes
 ProtectSystem=strict
@@ -338,10 +361,7 @@ StandardError=journal
 WantedBy=multi-user.target
 EOF
 
-    # Set ownership
     chown -R "$SERVICE_USER:$SERVICE_USER" "$INSTALL_DIR"
-    
-    # Reload systemd
     systemctl daemon-reload
     
     log_success "Systemd services created"
@@ -350,19 +370,16 @@ EOF
 setup_nginx() {
     log_step "Setting up nginx reverse proxy..."
     
-    # Install nginx if not present
     if ! command_exists nginx; then
         apt-get install -y nginx 2>/dev/null
     fi
     
-    # Create nginx config
     cat > /etc/nginx/sites-available/img-toolkit << 'EOF'
 server {
     listen 80;
     server_name _;
     client_max_body_size 100M;
 
-    # Frontend - serve static files
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_set_header Host $host;
@@ -371,7 +388,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Backend API
     location /api/ {
         proxy_pass http://127.0.0.1:5000;
         proxy_set_header Host $host;
@@ -384,11 +400,9 @@ server {
 }
 EOF
 
-    # Enable site
     rm -f /etc/nginx/sites-enabled/default
     ln -sf /etc/nginx/sites-available/img-toolkit /etc/nginx/sites-enabled/
     
-    # Test and reload nginx
     nginx -t && systemctl enable nginx && systemctl restart nginx
     
     log_success "Nginx configured"
@@ -411,12 +425,11 @@ enable_and_start_services() {
 }
 
 save_version() {
-    # Save installation timestamp and git info if available
     {
         echo "installed=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-        if [[ -d "$SCRIPT_DIR/.git" ]]; then
-            echo "commit=$(git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
-            echo "branch=$(git -C "$SCRIPT_DIR" branch --show-current 2>/dev/null || echo 'unknown')"
+        if [[ -d "$INSTALL_DIR/.git" ]]; then
+            echo "commit=$(git -C "$INSTALL_DIR" rev-parse --short HEAD 2>/dev/null || echo 'unknown')"
+            echo "branch=$(git -C "$INSTALL_DIR" branch --show-current 2>/dev/null || echo 'unknown')"
         fi
     } > "$VERSION_FILE"
     chown "$SERVICE_USER:$SERVICE_USER" "$VERSION_FILE"
@@ -443,7 +456,7 @@ print_completion_message() {
     echo "  - Status:       sudo systemctl status $BACKEND_SERVICE $FRONTEND_SERVICE nginx"
     echo "  - Logs:         sudo journalctl -u $BACKEND_SERVICE -u $FRONTEND_SERVICE -f"
     echo "  - Restart:      sudo systemctl restart $BACKEND_SERVICE $FRONTEND_SERVICE"
-    echo "  - Update:       sudo $0 update"
+    echo "  - Update:       curl -fsSL https://raw.githubusercontent.com/IT-BAER/IMG-Toolkit/main/install.sh | sudo bash -s -- update"
     echo ""
     echo "Installation directory: $INSTALL_DIR"
     echo ""
@@ -540,7 +553,7 @@ main() {
                 if [[ "$FORCE" != "true" ]]; then
                     read -p "Do you want to reinstall? (y/N): " confirm </dev/tty || confirm="n"
                     if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-                        log_info "Use '$0 update' to update existing installation"
+                        log_info "Use 'update' mode to update existing installation"
                         exit 0
                     fi
                 else
@@ -548,9 +561,9 @@ main() {
                 fi
             fi
             stop_services
+            setup_repository
             install_system_dependencies
             create_service_user
-            setup_installation_directory
             setup_python_environment
             build_frontend
             create_systemd_services
@@ -560,13 +573,13 @@ main() {
             print_completion_message
             ;;
         update)
-            if ! is_installed; then
-                log_error "IMG-Toolkit is not installed. Use '$0 install' first."
-                exit 1
+            if ! is_installed && [[ ! -d "$INSTALL_DIR" ]]; then
+                log_info "IMG-Toolkit is not installed. Performing fresh install..."
+                MODE="install"
             fi
             stop_services
+            setup_repository
             install_system_dependencies
-            setup_installation_directory
             setup_python_environment
             build_frontend
             create_systemd_services
@@ -611,6 +624,11 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+# For curl | bash, default to non-interactive
+if [[ "$RUNNING_FROM_CURL" == "true" ]]; then
+    FORCE=true
+fi
 
 # Run main function
 main "$@"
