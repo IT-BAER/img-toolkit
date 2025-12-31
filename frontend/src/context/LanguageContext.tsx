@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from "react";
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
 
 type Language = "en" | "de";
 
@@ -438,16 +438,23 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [language, setLanguage] = useState<Language>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("img-toolkit-language");
-      if (saved === "en" || saved === "de") return saved;
+  const [language, setLanguage] = useState<Language>("en");
+  const [mounted, setMounted] = useState(false);
+
+  // Initialize language from localStorage on mount (client-side only)
+  useEffect(() => {
+    const saved = localStorage.getItem("img-toolkit-language");
+    if (saved === "en" || saved === "de") {
+      setLanguage(saved);
+    } else {
       // Auto-detect browser language
       const browserLang = navigator.language.toLowerCase();
-      if (browserLang.startsWith("de")) return "de";
+      if (browserLang.startsWith("de")) {
+        setLanguage("de");
+      }
     }
-    return "en";
-  });
+    setMounted(true);
+  }, []);
 
   const handleSetLanguage = useCallback((lang: Language) => {
     setLanguage(lang);
@@ -463,7 +470,7 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
         console.warn(`Translation missing for key: ${key}`);
         return key;
       }
-      return translation[language];
+      return language === "de" ? translation.de : translation.en;
     },
     [language]
   );

@@ -4,10 +4,13 @@ import React, { useState, useCallback, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useDropzone } from "react-dropzone";
-import { HardDrive } from "lucide-react";
+import { 
+  Upload, 
+  X,
+  ImageIcon,
+} from "lucide-react";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ReleaseNotesButton } from "@/components/ReleaseNotesButton";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Drawer,
   DrawerContent,
@@ -21,7 +24,6 @@ import BackendStatusBanner from "@/components/BackendStatusBanner";
 import ErrorModal from "@/components/ErrorModal";
 import FileManager from "@/components/StorageFileManager";
 import CompressedFilesDrawer from "@/components/CompressedFilesDrawer";
-import PageFooter from "@/components/PageFooter";
 import FileConversionForm from "@/components/FileConversionForm";
 import { DownloadZipToast } from "@/components/CustomToast";
 import { ErrorStoreProvider, useErrorStore } from "@/context/ErrorStore";
@@ -269,100 +271,126 @@ function HomePageContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-50 flex flex-col">
+    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
       <BackendStatusBanner backendDown={backendDown} />
-      <div className="p-4 flex-grow flex flex-col items-center text-foreground">
-        <ToastContainer />
-        <Card className="w-full max-w-xl">
-          <CardHeader>
-            <CardTitle className="text-center text-2xl font-bold">
-              IMG-Toolkit
-            </CardTitle>
-            <p className="text-center text-gray-400 text-sm">
-              {t('subtitle')}
-            </p>
-          </CardHeader>
-          <CardContent>
-            <FileConversionForm
-              isLoading={isLoading}
-              error={error}
-              quality={quality}
-              setQuality={setQuality}
-              width={width}
-              setWidth={setWidth}
-              resizeWidthEnabled={resizeWidthEnabled}
-              setResizeWidthEnabled={setResizeWidthEnabled}
-              outputFormat={outputFormat}
-              setOutputFormat={setOutputFormat}
-              files={files}
-              removeFile={removeFile}
-              clearFileSelection={clearFileSelection}
-              onSubmit={handleSubmit}
-              targetSizeMB={targetSizeMB}
-              setTargetSizeMB={setTargetSizeMB}
-              jpegMode={jpegMode}
-              setJpegMode={setJpegMode}
-              getRootProps={getRootProps}
-              getInputProps={getInputProps}
-              isDragActive={isDragActive}
-              supportedExtensions={formattedSupportedExtensions}
-              verifiedExtensions={formattedVerifiedExtensions}
-              extensionsLoading={extensionsLoading}
-              extensionsError={extensionsError}
-            />
-          </CardContent>
-        </Card>
-
-         {/* A floating button to open the FileManager drawer */}
-        <div className="fixed bottom-4 right-4">
-          <button
-            disabled={isLoading}
-            onClick={() => setFileManagerOpen(true)}
-            data-testid="storage-management-btn"
-            className={`rounded-full p-3 shadow-lg hover:shadow-xl ${
-              isLoading ? "opacity-50 cursor-not-allowed" : "bg-blue-500"
-            }`}
-          >
-            <HardDrive className="h-6 w-6" />
-          </button>
+      <ToastContainer 
+        position="top-right" 
+        autoClose={3000}
+        hideProgressBar
+        newestOnTop
+        closeOnClick
+        theme="colored"
+      />
+      
+      <div className="mx-auto max-w-3xl space-y-6">
+        {/* Large Dropzone */}
+        <div
+          {...getRootProps()}
+          className={`border-2 border-dashed rounded-2xl p-12 sm:p-16 lg:p-20 text-center cursor-pointer transition-all min-h-[280px] flex flex-col items-center justify-center ${
+            isDragActive 
+              ? "border-primary bg-primary/5" 
+              : "border-border hover:border-primary/50 hover:bg-muted/30"
+          } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+        >
+          <input {...getInputProps()} data-testid="dropzone-input" />
+          <Upload className={`h-12 w-12 mb-4 ${isDragActive ? "text-primary" : "text-muted-foreground"}`} />
+          <p className="text-lg font-medium">
+            {isDragActive ? t('dropImagesHere') : t('dropFilesHere')}
+          </p>
+          <p className="text-sm text-muted-foreground mt-1">or click to browse</p>
         </div>
 
-        <div className="fixed bottom-4 left-4 z-40">
-          <ReleaseNotesButton />
-        </div>
-
-        {/* Drawer for File Manager */}
-        <Drawer open={fileManagerOpen} onOpenChange={setFileManagerOpen}>
-          <DrawerTrigger asChild>
-            <button className="hidden" />
-          </DrawerTrigger>
-          <DrawerContent className="border-0">
-            <VisuallyHidden>
-              <DrawerHeader>
-                <DrawerTitle className="text-lg font-semibold text-center">
-                  Admin Tools
-                </DrawerTitle>
-              </DrawerHeader>
-            </VisuallyHidden>
-            <div className="p-4">
-              <FileManager onForceClean={onForceCleanCallback} key={fileManagerRefresh} />
-            </div>
-          </DrawerContent>
-        </Drawer>
-
-        {converted.length > 0 && (
-          <CompressedFilesDrawer
-            converted={converted}
-            destFolder={destFolder}
-            isOpen={drawerOpen}
-            onOpenChange={setDrawerOpen}
-            onDownloadAll={handleDownloadAll}
-          />
+        {/* File List */}
+        {files.length > 0 && (
+          <div className="space-y-2">
+            {files.map((file) => (
+              <div
+                key={file.name}
+                className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
+                data-testid="dropzone-added-file-wrapper"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <ImageIcon className="h-5 w-5 text-muted-foreground shrink-0" />
+                  <span className="text-sm font-medium truncate" data-testid="dropzone-added-file">{file.name}</span>
+                  <span className="text-xs text-muted-foreground">({(file.size / 1024 / 1024).toFixed(1)}MB)</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  disabled={isLoading}
+                  onClick={() => removeFile(file.name)}
+                  className="h-8 w-8"
+                  data-testid="dropzone-remove-file-btn"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
         )}
 
-        <ErrorModal />
-        <PageFooter />
+        {/* Settings - Below */}
+        <div className="pt-2">
+          <FileConversionForm
+            isLoading={isLoading}
+            error={error}
+            quality={quality}
+            setQuality={setQuality}
+            width={width}
+            setWidth={setWidth}
+            resizeWidthEnabled={resizeWidthEnabled}
+            setResizeWidthEnabled={setResizeWidthEnabled}
+            outputFormat={outputFormat}
+            setOutputFormat={setOutputFormat}
+            files={files}
+            removeFile={removeFile}
+            clearFileSelection={clearFileSelection}
+            onSubmit={handleSubmit}
+            targetSizeMB={targetSizeMB}
+            setTargetSizeMB={setTargetSizeMB}
+            jpegMode={jpegMode}
+            setJpegMode={setJpegMode}
+            getRootProps={getRootProps}
+            getInputProps={getInputProps}
+            isDragActive={isDragActive}
+            supportedExtensions={formattedSupportedExtensions}
+            verifiedExtensions={formattedVerifiedExtensions}
+            extensionsLoading={extensionsLoading}
+            extensionsError={extensionsError}
+            hideDropzone
+            hideFileList
+          />
+        </div>
       </div>
+
+      {/* File Manager Drawer */}
+      <Drawer open={fileManagerOpen} onOpenChange={setFileManagerOpen}>
+        <DrawerTrigger asChild>
+          <button className="hidden" />
+        </DrawerTrigger>
+        <DrawerContent className="border-0 max-h-[85vh]">
+          <VisuallyHidden>
+            <DrawerHeader>
+              <DrawerTitle>Storage</DrawerTitle>
+            </DrawerHeader>
+          </VisuallyHidden>
+          <div className="p-4 overflow-y-auto">
+            <FileManager onForceClean={onForceCleanCallback} key={fileManagerRefresh} />
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      {converted.length > 0 && (
+        <CompressedFilesDrawer
+          converted={converted}
+          destFolder={destFolder}
+          isOpen={drawerOpen}
+          onOpenChange={setDrawerOpen}
+          onDownloadAll={handleDownloadAll}
+        />
+      )}
+
+      <ErrorModal />
     </div>
   );
 }

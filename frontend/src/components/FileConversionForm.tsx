@@ -55,6 +55,10 @@ interface FileConversionFormProps {
   verifiedExtensions: string[]
   extensionsLoading: boolean
   extensionsError: Error | null
+
+  // ✅ New props for page.tsx integration
+  hideDropzone?: boolean
+  hideFileList?: boolean
 }
 
 const tooltipContent = {
@@ -94,6 +98,8 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
   verifiedExtensions,
   extensionsLoading,
   extensionsError,
+  hideDropzone = false,
+  hideFileList = false,
 }) => {
   const { t } = useTranslation();
 
@@ -125,7 +131,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
           {files.map((file) => (
             <div
               key={file.name}
-              className="flex items-center justify-between bg-gray-800 rounded-md p-2 text-gray-100"
+              className="flex items-center justify-between bg-muted rounded-md p-2 text-foreground"
               data-testid="dropzone-added-file-wrapper"
             >
               <span className="text-sm" data-testid="dropzone-added-file">
@@ -152,12 +158,12 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
       <div
         {...getRootProps()}
         className={`border-2 border-dashed rounded-md p-6 text-center transition-colors ${
-          isDragActive ? "border-blue-400" : "border-gray-700"
+          isDragActive ? "border-primary" : "border-border"
         } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
       >
         <input {...getInputProps()} data-testid="dropzone-input" />
         {isDragActive ? (
-          <p className="text-blue-300">{t('dropImagesHere')}</p>
+          <p className="text-primary">{t('dropImagesHere')}</p>
         ) : isLoading ? (
           <p>{t('cannotDropWhileProcessing')}</p>
         ) : (
@@ -188,12 +194,12 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
-                <Info className="h-4 w-4 text-gray-400 cursor-pointer" />
+                <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
               </span>
             </TooltipTrigger>
             <TooltipContent
               side="top"
-              className="bg-gray-800 text-white p-2 rounded shadow-lg border-0 whitespace-pre-line"
+              className="bg-popover text-popover-foreground p-2 rounded shadow-lg border border-border whitespace-pre-line"
             >
               {t('tooltipOutputFormat')}
             </TooltipContent>
@@ -202,11 +208,11 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
         <Select value={outputFormat} onValueChange={setOutputFormat}>
           <SelectTrigger
             id="outputFormat"
-            className="bg-gray-800 text-gray-300 border-gray-700 focus:border-blue-500"
+            className="bg-background text-foreground border-border focus:border-primary"
           >
             <SelectValue placeholder="Select format" />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800 text-gray-300 border-gray-700">
+          <SelectContent className="bg-popover text-popover-foreground border-border">
             <SelectItem value="jpeg">{t('jpegSmaller')}</SelectItem>
             <SelectItem value="png">{t('pngTransparency')}</SelectItem>
             <SelectItem value="ico">{t('icoTransparency')}</SelectItem>
@@ -251,18 +257,18 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <Info className="h-4 w-4 text-gray-400 cursor-pointer" />
+                    <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
                   side="top"
-                  className="bg-gray-800 text-white p-2 rounded shadow-lg border-0"
+                  className="bg-popover text-popover-foreground p-2 rounded shadow-lg border border-border"
                 >
                   <p className="text-sm">{t('tooltipQuality')}</p>
                 </TooltipContent>
               </Tooltip>
             </Label>
-            <span className="text-sm text-gray-400">{quality}</span>
+            <span className="text-sm text-muted-foreground">{quality}</span>
           </div>
           <input
             id="quality"
@@ -272,7 +278,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
             value={quality}
             onChange={(e) => setQuality(e.target.value)}
             disabled={isLoading}
-            className="w-full accent-blue-500"
+            className="w-full"
           />
           <div className="flex gap-2 pt-2 flex-wrap">
             <Button type="button" size="sm" variant="outline" disabled={isLoading} onClick={() => setQuality("60")}>
@@ -303,19 +309,19 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               <Tooltip>
                 <TooltipTrigger asChild>
                   <span>
-                    <Info className="h-4 w-4 text-gray-400 cursor-pointer" />
+                    <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
                   </span>
                 </TooltipTrigger>
                 <TooltipContent
                   side="top"
-                  className="bg-gray-800 text-white p-2 rounded shadow-lg border-0"
+                  className="bg-popover text-popover-foreground p-2 rounded shadow-lg border border-border"
                 >
                   <p className="text-sm">{t('tooltipTargetSize')}</p>
                 </TooltipContent>
               </Tooltip>
             </Label>
             {/* value next to label, like quality */}
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-muted-foreground">
               {(targetSizeMB && targetSizeMB.trim() !== "" ? targetSizeMB : "0.50")} MB
             </span>
           </div>
@@ -330,7 +336,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
             value={parseFloat(targetSizeMB || "0.50")}
             onChange={(e) => setTargetSizeMB(e.target.value)}
             disabled={isLoading}
-            className="w-full accent-blue-500"
+            className="w-full"
           />
 
           {/* optional number field */}
@@ -346,14 +352,14 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
               value={targetSizeMB}
               onChange={(e) => setTargetSizeMB(e.target.value)}
               disabled={isLoading}
-              className="bg-gray-800 text-gray-100 placeholder-gray-400 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed pr-12"
+              className="bg-background text-foreground placeholder-muted-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed pr-12"
             />
-            <span className="absolute inset-y-0 right-3 flex items-center text-sm text-gray-400 pointer-events-none">
+            <span className="absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground pointer-events-none">
               MB
             </span>
           </div>
 
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-muted-foreground">
             {t('fileSizeHint')}
           </p>
         </div>
@@ -370,12 +376,12 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
             <Tooltip>
               <TooltipTrigger asChild>
                 <span>
-                  <Info className="h-4 w-4 text-gray-400 cursor-pointer" />
+                  <Info className="h-4 w-4 text-muted-foreground cursor-pointer" />
                 </span>
               </TooltipTrigger>
               <TooltipContent
                 side="top"
-                className="bg-gray-800 text-white p-2 rounded shadow-lg border-0"
+                className="bg-popover text-popover-foreground p-2 rounded shadow-lg border border-border"
               >
                 <p className="text-sm">{t('tooltipResizeWidth')}</p>
               </TooltipContent>
@@ -406,7 +412,7 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
             value={width}
             onChange={(e) => setWidth(e.target.value)}
             disabled={isLoading}
-            className="bg-gray-800 text-gray-100 placeholder-gray-400 border border-gray-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-background text-foreground placeholder-muted-foreground border border-border focus:border-primary focus:ring-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed"
           />
         )}
       </div>
@@ -415,32 +421,22 @@ const FileConversionForm: React.FC<FileConversionFormProps> = ({
       {renderError}
 
       {/* Dropzone */}
-      {renderDropZone}
+      {!hideDropzone && renderDropZone}
 
       {/* Files List */}
-      {renderFilesList}
+      {!hideFileList && renderFilesList}
 
       {/* Action Buttons */}
-      <div className="flex items-center justify-between gap-4">
-        <Button type="submit" variant="default" disabled={isLoading} data-testid="convert-btn">
+      <div className={`flex justify-center ${hideDropzone && hideFileList ? "pt-4" : ""}`}>
+        <Button type="submit" variant="default" disabled={isLoading} data-testid="convert-btn" className="h-12 px-12 text-base font-medium">
           {isLoading ? (
             <div className="flex items-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin" />
+              <Loader2 className="h-5 w-5 animate-spin" />
               {t('processing')}
             </div>
           ) : (
             t('startConverting')
           )}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={clearFileSelection}
-          disabled={isLoading}
-          className="flex items-center gap-2 outline outline-1 outline-gray-700"
-        >
-          <Trash className="h-4 w-4" />
-          {t('clear')}
         </Button>
       </div>
     </form>
