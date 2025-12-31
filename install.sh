@@ -282,7 +282,7 @@ User=${SERVICE_USER}
 Group=${SERVICE_USER}
 WorkingDirectory=${INSTALL_DIR}
 Environment="PATH=${INSTALL_DIR}/venv/bin:/usr/local/bin:/usr/bin:/bin"
-ExecStart=${INSTALL_DIR}/venv/bin/image-converter web
+ExecStart=${INSTALL_DIR}/venv/bin/img-toolkit web
 Restart=always
 RestartSec=5
 StandardOutput=journal
