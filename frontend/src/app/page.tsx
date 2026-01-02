@@ -297,7 +297,6 @@ function HomePageContent() {
           <p className="text-lg font-medium">
             {isDragActive ? t('dropImagesHere') : t('dropFilesHere')}
           </p>
-          <p className="text-sm text-muted-foreground mt-1">or click to browse</p>
         </div>
 
         {/* File List */}
