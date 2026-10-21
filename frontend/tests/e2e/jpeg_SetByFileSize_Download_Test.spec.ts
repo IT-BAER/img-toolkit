@@ -56,5 +56,5 @@ import { ImageFileDto } from './utls/ImageFileDto';
   const stat = fs.statSync(downloadedPath);
   expect(stat.size).toBeLessThanOrEqual(targetBytes + 2048); // +2KB tolerance for headers/metadata
 
-  expect(path.extname(downloadedPath).toLowerCase()).toBe('.jpg');
+  expect(path.extname(downloadedPath).toLowerCase()).toBe('.jpeg');
 });

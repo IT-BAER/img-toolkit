@@ -11,7 +11,7 @@ export class ImageFileDto {
 
     getExpectedOutputFileName(): string {
         return this.fileName.toLowerCase().endsWith('.heic') 
-            ? this.fileName.replace('.heic', '.jpg') 
+            ? this.fileName.replace('.heic', '.jpeg') 
             : this.fileName;
     }
 }

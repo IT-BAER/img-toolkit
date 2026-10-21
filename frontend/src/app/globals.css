@@ -5,67 +5,71 @@
 @plugin "tailwindcss-animate";
 
 
+/* SMS Group design tokens (same palette as fb-prep), as HSL for the shadcn variables. */
 :root {
-  --background: 210 20% 98%;
-  --foreground: 222 47% 11%;
+  --background: 240 11% 96%;        /* n50  #F5F5F7 */
+  --foreground: 240 5% 12%;         /* n800 #1C1C1F */
   --card: 0 0% 100%;
-  --card-foreground: 222 47% 11%;
+  --card-foreground: 240 5% 12%;
   --popover: 0 0% 100%;
-  --popover-foreground: 222 47% 11%;
-  --primary: 30 100% 47%;
+  --popover-foreground: 240 5% 12%;
+  --primary: 214 100% 26%;          /* p600 #003B87 */
   --primary-foreground: 0 0% 100%;
-  --secondary: 30 30% 95%;
-  --secondary-foreground: 222 47% 11%;
-  --muted: 210 40% 96%;
-  --muted-foreground: 215 16% 47%;
-  --accent: 30 30% 95%;
-  --accent-foreground: 222 47% 11%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 210 40% 98%;
-  --success: 142 76% 36%;
-  --success-foreground: 210 40% 98%;
-  --warning: 38 92% 50%;
-  --warning-foreground: 222 47% 11%;
-  --border: 214 32% 91%;
-  --input: 214 32% 91%;
-  --ring: 30 100% 47%;
-  --chart-1: 30 100% 47%;
-  --chart-2: 142 76% 36%;
-  --chart-3: 38 92% 50%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
+  --secondary: 215 100% 97%;        /* p50  #EEF5FF */
+  --secondary-foreground: 214 100% 26%;
+  --muted: 240 11% 96%;
+  --muted-foreground: 240 4% 45%;   /* n500 #6E6E76 */
+  --accent: 215 100% 97%;
+  --accent-foreground: 214 100% 20%;
+  --destructive: 0 62% 50%;         /* #CF3030 */
+  --destructive-foreground: 0 0% 100%;
+  --success: 144 64% 33%;           /* #1E8B4A */
+  --success-foreground: 0 0% 100%;
+  --warning: 33 91% 45%;            /* #D97C0A */
+  --warning-foreground: 0 0% 100%;
+  --border: 240 5% 93%;             /* n100 #EBEBED */
+  --input: 240 6% 83%;              /* n200 #D1D1D6 */
+  --ring: 214 100% 26%;
+  --chart-1: 214 100% 26%;
+  --chart-2: 24 92% 47%;
+  --chart-3: 144 64% 33%;
+  --chart-4: 212 64% 53%;
+  --chart-5: 33 91% 45%;
   --radius: 0.75rem;
+  --cta: 24 92% 47%;                /* a500 #E8630A */
+  --brand-text: 214 100% 26%;
+  --drop-hover: 215 100% 97%;
+  --drop-border: 212 64% 53%;       /* p400 #3A82D4 */
 }
 
+/* fb-prep dark palette; next-themes sets .dark from the OS setting. */
 .dark {
-  --background: 222 47% 6%;
-  --foreground: 210 40% 98%;
-  --card: 222 47% 9%;
-  --card-foreground: 210 40% 98%;
-  --popover: 222 47% 9%;
-  --popover-foreground: 210 40% 98%;
-  --primary: 30 100% 50%;
-  --primary-foreground: 222 47% 6%;
-  --secondary: 30 20% 15%;
-  --secondary-foreground: 210 40% 98%;
-  --muted: 217 33% 17%;
-  --muted-foreground: 215 20% 65%;
-  --accent: 30 20% 15%;
-  --accent-foreground: 210 40% 98%;
-  --destructive: 0 62% 45%;
-  --destructive-foreground: 210 40% 98%;
-  --success: 142 70% 45%;
-  --success-foreground: 210 40% 98%;
-  --warning: 38 92% 50%;
-  --warning-foreground: 222 47% 11%;
-  --border: 217 33% 20%;
-  --input: 217 33% 20%;
-  --ring: 30 100% 50%;
-  --chart-1: 30 100% 50%;
-  --chart-2: 142 70% 45%;
-  --chart-3: 38 92% 50%;
-  --chart-4: 280 65% 60%;
-  --chart-5: 340 75% 55%;
+  --background: 220 17% 7%;         /* #0f1115 */
+  --foreground: 216 12% 92%;        /* #e8eaed */
+  --card: 218 14% 11%;              /* #181b20 */
+  --card-foreground: 216 12% 92%;
+  --popover: 218 14% 11%;
+  --popover-foreground: 216 12% 92%;
+  --primary: 214 100% 26%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 219 40% 16%;         /* #182338 */
+  --secondary-foreground: 212 74% 68%;
+  --muted: 220 13% 9%;              /* #14161a */
+  --muted-foreground: 216 9% 68%;   /* #a7adb6 */
+  --accent: 219 40% 16%;
+  --accent-foreground: 212 74% 68%; /* p300 #72AAEA */
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --success: 142 69% 58%;
+  --success-foreground: 220 17% 7%;
+  --warning: 43 96% 56%;
+  --warning-foreground: 220 17% 7%;
+  --border: 218 12% 19%;            /* #2a2e35 */
+  --input: 219 11% 25%;             /* #3a3f48 */
+  --ring: 212 64% 53%;
+  --brand-text: 212 74% 68%;
+  --drop-hover: 219 40% 16%;
+  --drop-border: 212 64% 53%;
 }
 
 
@@ -75,7 +79,7 @@
   }
 
   body {
-    font-family: var(--font-geist-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     @apply bg-background text-foreground antialiased;
   }
 }
@@ -150,4 +154,23 @@ input[type="range"]::-webkit-slider-thumb {
 
 input[type="range"]::-moz-range-thumb {
   cursor: pointer;
+}
+
+/* Whole-page drag overlay (fb-prep style) */
+.page-drop-overlay {
+  position: fixed;
+  inset: 16px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 3px dashed hsl(var(--drop-border));
+  border-radius: 16px;
+  background: hsl(var(--background) / 0.85);
+  backdrop-filter: blur(2px);
+  color: hsl(var(--brand-text));
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.4px;
+  pointer-events: none;
 }

@@ -105,10 +105,13 @@ function HomePageContent() {
     [clearError, setError, formattedSupportedExtensions]
   );
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  // The whole page is the drop target; only the framed box opens the file picker.
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     disabled: isLoading,
     multiple: true,
+    noClick: true,
+    noKeyboard: true,
   });
 
   const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -271,7 +274,9 @@ function HomePageContent() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
+    <div {...getRootProps({ className: "min-h-screen bg-background" })}>
+      <input {...getInputProps()} data-testid="dropzone-input" />
+      {isDragActive && <div className="page-drop-overlay">{t('dropImagesHere')}</div>}
       <BackendStatusBanner backendDown={backendDown} />
       <ToastContainer 
         position="top-right" 
@@ -282,19 +287,33 @@ function HomePageContent() {
         theme="colored"
       />
       
-      <div className="mx-auto max-w-3xl space-y-6">
-        {/* Large Dropzone */}
+      <header className="sticky top-0 z-10 flex items-center gap-4 border-b border-border bg-card px-4 py-4 shadow-sm sm:px-8 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-[hsl(var(--cta))]">
+        <div className="flex flex-col">
+          <span className="text-base font-bold tracking-tight">IMG-Toolkit</span>
+          <span className="text-xs text-muted-foreground">{t('subtitle')}</span>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
+        {/* Framed dropzone: click opens the picker, drops work anywhere on the page */}
         <div
-          {...getRootProps()}
-          className={`border-2 border-dashed rounded-2xl p-12 sm:p-16 lg:p-20 text-center cursor-pointer transition-all min-h-[280px] flex flex-col items-center justify-center ${
-            isDragActive 
-              ? "border-primary bg-primary/5" 
-              : "border-border hover:border-primary/50 hover:bg-muted/30"
+          role="button"
+          tabIndex={isLoading ? -1 : 0}
+          onClick={() => !isLoading && open()}
+          onKeyDown={(e) => {
+            if (!isLoading && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              open();
+            }
+          }}
+          className={`border-2 border-dashed rounded-2xl bg-card p-12 sm:p-16 text-center cursor-pointer transition-colors min-h-[240px] flex flex-col items-center justify-center gap-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            isDragActive
+              ? "border-[hsl(var(--drop-border))] bg-[hsl(var(--drop-hover))]"
+              : "border-input hover:border-[hsl(var(--drop-border))] hover:bg-[hsl(var(--drop-hover))]"
           } ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          <input {...getInputProps()} data-testid="dropzone-input" />
-          <Upload className={`h-12 w-12 mb-4 ${isDragActive ? "text-primary" : "text-muted-foreground"}`} />
-          <p className="text-lg font-medium">
+          <Upload className="h-9 w-9 text-[hsl(var(--brand-text))]" />
+          <p className="text-[15px] font-semibold">
             {isDragActive ? t('dropImagesHere') : t('dropFilesHere')}
           </p>
         </div>
@@ -305,12 +324,12 @@ function HomePageContent() {
             {files.map((file) => (
               <div
                 key={file.name}
-                className="flex items-center justify-between rounded-lg bg-muted/50 px-4 py-3"
+                className="flex items-center justify-between rounded-xl border-[1.5px] border-border bg-card px-4 py-3 shadow-sm"
                 data-testid="dropzone-added-file-wrapper"
               >
                 <div className="flex items-center gap-3 min-w-0">
                   <ImageIcon className="h-5 w-5 text-muted-foreground shrink-0" />
-                  <span className="text-sm font-medium truncate" data-testid="dropzone-added-file">{file.name}</span>
+                  <span className="font-[family-name:var(--font-dm-mono)] text-[13px] font-medium truncate" data-testid="dropzone-added-file">{file.name}</span>
                   <span className="text-xs text-muted-foreground">({(file.size / 1024 / 1024).toFixed(1)}MB)</span>
                 </div>
                 <Button
@@ -329,7 +348,7 @@ function HomePageContent() {
         )}
 
         {/* Settings - Below */}
-        <div className="pt-2">
+        <div className="rounded-2xl border-[1.5px] border-border bg-card p-5 shadow-sm sm:p-6">
           <FileConversionForm
             isLoading={isLoading}
             error={error}

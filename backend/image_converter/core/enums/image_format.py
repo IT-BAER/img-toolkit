@@ -37,7 +37,7 @@ class ImageFormat(Enum):
 
                                                  
 IMAGE_FORMAT_EXTENSIONS = {
-    "JPEG": ".jpg",
+    "JPEG": ".jpeg",
     "PNG": ".png",
     "ICO": ".ico",
 }
