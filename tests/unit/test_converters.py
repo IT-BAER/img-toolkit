@@ -6,6 +6,7 @@ from PIL import Image
 from backend.image_converter.application.dtos import ConversionDetails
 from backend.image_converter.core.factory.jpeg_converter import JpegConverter
 from backend.image_converter.core.factory.png_converter import PngConverter
+from backend.image_converter.infrastructure.pillow_jpeg_converter import PillowJpegConverter
 from backend.image_converter.infrastructure.logger import Logger
 from backend.image_converter.core.internals.utls import Result
 
@@ -63,3 +64,11 @@ def test_When_ImageContainsTransparency_Expect_PngConverterPreservesAlpha(sample
     with Image.open(BytesIO(output_data)) as out_img:
         assert out_img.mode == "RGBA"                       
         assert out_img.size == (64, 64)
+
+
+@pytest.mark.parametrize("converter_cls", [JpegConverter, PillowJpegConverter])
+def test_When_EncodingJpeg_Expect_BaselineNotProgressive(converter_cls, sample_rgba_png, mock_logger):
+    """Older TV decoders read only baseline JPEG (SOF0), not progressive (SOF2)."""
+    data = converter_cls(quality=80, logger=mock_logger).encode_bytes(sample_rgba_png)
+    assert b"\xff\xc0" in data
+    assert b"\xff\xc2" not in data

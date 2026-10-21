@@ -22,7 +22,7 @@ class PillowJpegConverter:
                 format="JPEG",
                 quality=self.quality,
                 optimize=True,
-                progressive=True,
+                progressive=False,
                 subsampling="4:2:0",
             )
             return out.getvalue()
