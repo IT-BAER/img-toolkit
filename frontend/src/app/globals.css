@@ -156,6 +156,8 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 
+.embedded .app-bar { display: none; }
+
 /* Whole-page drag overlay (fb-prep style) */
 .page-drop-overlay {
   position: fixed;

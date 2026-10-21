@@ -29,6 +29,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Runs before paint: hides the app bar when the page is embedded in an iframe. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: "if (window.self !== window.top) document.documentElement.classList.add('embedded');",
+          }}
+        />
+      </head>
       <body
         className={`${jakarta.variable} ${dmMono.variable} antialiased min-h-screen`}
       >

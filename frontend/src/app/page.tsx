@@ -23,9 +23,7 @@ import { VisuallyHidden } from "@/components/visually-hidden";
 import BackendStatusBanner from "@/components/BackendStatusBanner";
 import ErrorModal from "@/components/ErrorModal";
 import FileManager from "@/components/StorageFileManager";
-import CompressedFilesDrawer from "@/components/CompressedFilesDrawer";
 import FileConversionForm from "@/components/FileConversionForm";
-import { DownloadZipToast } from "@/components/CustomToast";
 import { ErrorStoreProvider, useErrorStore } from "@/context/ErrorStore";
 import { useBackendHealth } from "@/hooks/useBackendHealth";
 import { useSupportedExtensions } from "@/hooks/useSupportedExtensions";
@@ -52,13 +50,10 @@ function HomePageContent() {
   const [width, setWidth] = useState("");
   const [resizeWidthEnabled, setResizeWidthEnabled] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [converted, setConverted] = useState<string[]>([]);
-  const [destFolder, setDestFolder] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [outputFormat, setOutputFormat] = useState("jpeg");
   const [targetSizeMB, setTargetSizeMB] = useState("");
   const [jpegMode, setJpegMode] = useState<"quality" | "size">("quality");
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [fileManagerOpen, setFileManagerOpen] = useState(false);
   const [fileManagerRefresh, setFileManagerRefresh] = useState(0);
 
@@ -75,8 +70,6 @@ function HomePageContent() {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
       clearError();
-      setConverted([]);
-      setDestFolder("");
 
       const supportedFiles: File[] = [];
       const unsupportedFiles: string[] = [];
@@ -113,8 +106,6 @@ function HomePageContent() {
     noClick: true,
     noKeyboard: true,
   });
-
-  const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -163,8 +154,6 @@ function HomePageContent() {
 
       setIsLoading(true);
       clearError();
-      setConverted([]);
-      setDestFolder("");
 
       const formData = new FormData();
       files.forEach((file) => formData.append("files[]", file));
@@ -198,10 +187,13 @@ function HomePageContent() {
           return;
         }
         const data = await res.json();
-        setConverted(data.converted_files);
-        setDestFolder(data.dest_folder);
-        setDrawerOpen(true);
-        await delay(600);
+        const converted: string[] = data.converted_files;
+        const folder = encodeURIComponent(data.dest_folder);
+        // One file downloads as-is; several download as one ZIP.
+        window.location.href =
+          converted.length === 1
+            ? `/api/download?folder=${folder}&file=${encodeURIComponent(converted[0])}`
+            : `/api/download_all?folder=${folder}`;
         toast.success(
           `${data.converted_files.length} Image${
             data.converted_files.length > 1 ? "s" : ""
@@ -245,13 +237,6 @@ function HomePageContent() {
     setFiles((prev) => prev.filter((f) => f.name !== fileName));
   }, []);
 
-  const handleDownloadAll = useCallback(() => {
-    window.location.href = `/api/download_all?folder=${encodeURIComponent(
-      destFolder
-    )}`;
-    toast(<DownloadZipToast />);
-  }, [destFolder]);
-
   const onForceCleanCallback = useCallback(async () => {
     try {
       const res = await fetch("/api/force_cleanup", { method: "POST" });
@@ -260,9 +245,6 @@ function HomePageContent() {
         toast.success(
           "Deletion Complete. Your processed files have been permanently removed. 🧹🧹🧹"
         );
-        setConverted([]);
-        setDestFolder("");
-        setDrawerOpen(false);
         setFileManagerRefresh((prev) => prev + 1);
       } else {
         toast.error(json.error || "Force cleanup failed.");
@@ -287,7 +269,7 @@ function HomePageContent() {
         theme="colored"
       />
       
-      <header className="sticky top-0 z-10 flex items-center gap-4 border-b border-border bg-card px-4 py-4 shadow-sm sm:px-8 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-[hsl(var(--cta))]">
+      <header className="app-bar sticky top-0 z-10 flex items-center gap-4 border-b border-border bg-card px-4 py-4 shadow-sm sm:px-8 before:absolute before:inset-y-0 before:left-0 before:w-1 before:bg-[hsl(var(--cta))]">
         <div className="flex flex-col">
           <span className="text-base font-bold tracking-tight">IMG-Toolkit</span>
           <span className="text-xs text-muted-foreground">{t('subtitle')}</span>
@@ -398,15 +380,6 @@ function HomePageContent() {
         </DrawerContent>
       </Drawer>
 
-      {converted.length > 0 && (
-        <CompressedFilesDrawer
-          converted={converted}
-          destFolder={destFolder}
-          isOpen={drawerOpen}
-          onOpenChange={setDrawerOpen}
-          onDownloadAll={handleDownloadAll}
-        />
-      )}
 
       <ErrorModal />
     </div>
